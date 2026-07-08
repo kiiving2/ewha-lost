@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/moonsprod/NanumSquare@master/nanumsquare.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학교 분실물 찾기 - 로그인</title>
+    <style>
+       body {
+    font-family: 'NanumSquare', sans-serif;
+    background-color: #f4f7f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+        .login-container { background-color: white; padding: 40px 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); width: 100%; max-width: 320px; text-align: center; }
+        h1 { font-size: 24px; color: #333; margin-bottom: 10px; }
+        .description { font-size: 14px; color: #666; margin-bottom: 25px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-login { background-color: #4CAF50; color: white; }
+        .btn-guest { background-color: #e9ecef; color: #333; }
+        .error-message { color: red; font-size: 12px; margin-bottom: 10px; display: none; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <div id="custom-alert-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background-color: white; padding: 25px; border-radius: 8px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-top: 0; color: #004932; font-size: 18px;">알림</h3>
+            <p style="color: #333; font-size: 15px; margin-bottom: 20px;">로그인 성공! 환영합니다.</p>
+            <button id="custom-alert-btn" style="background-color: #004932; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%;">확인</button>
+        </div>
+    </div>
+
+    <div id="error-alert-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background-color: white; padding: 25px; border-radius: 8px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <h3 style="margin-top: 0; color: #d32f2f; font-size: 18px;">오류</h3>
+            <p id="error-alert-msg" style="color: #333; font-size: 15px; margin-bottom: 20px;">문제가 발생했습니다.</p>
+            <button id="error-alert-btn" style="background-color: #d32f2f; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%;">닫기</button>
+        </div>
+    </div>
+
+    <div class="login-container">
+        <h1>분실물 찾기 🔍</h1>
+        <p class="description">우리 학교 이메일로 로그인해주세요.</p>
+        
+        <input type="email" id="email" placeholder="이메일 (@ewha.hs.kr)">
+        <input type="password" id="password" placeholder="비밀번호">
+        
+        <p id="error-msg" class="error-message">이메일은 @ewha.hs.kr 로 끝나야 합니다.</p>
+
+        <button id="btn-login" class="btn-login">로그인 / 계정 생성</button>
+        <button id="btn-guest" class="btn-guest">게스트 모드로 이용하기</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyABnpD9R62-AQiL1ON9JBh_Lx0uPacBnuA",
+            authDomain: "ewhalost.firebaseapp.com",
+            projectId: "ewhalost",
+            storageBucket: "ewhalost.firebasestorage.app",
+            messagingSenderId: "718487885351",
+            appId: "1:718487885351:web:39c2f1d224a7988eea2002",
+            measurementId: "G-WH3F1P1R1V"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // 예쁜 성공 팝업 함수
+        function showSuccessPopup() {
+            const alertOverlay = document.getElementById('custom-alert-overlay');
+            alertOverlay.style.display = 'flex'; 
+            document.getElementById('custom-alert-btn').onclick = function() {
+                alertOverlay.style.display = 'none';
+                window.location.href = "map.html";  
+            };
+        }
+
+        // 예쁜 에러 팝업 함수 (이 페이지에는... 문구 안 뜨게 만듦!)
+        function showErrorPopup(msg) {
+            const errorOverlay = document.getElementById('error-alert-overlay');
+            document.getElementById('error-alert-msg').innerText = msg;
+            errorOverlay.style.display = 'flex';
+            document.getElementById('error-alert-btn').onclick = function() {
+                errorOverlay.style.display = 'none';
+            };
+        }
+
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+
+            if (!email.endsWith('@ewha.hs.kr')) {
+                errorMsg.style.display = 'block';
+                return;
+            } else {
+                errorMsg.style.display = 'none';
+            }
+
+            if (password.length < 6) {
+                showErrorPopup("비밀번호를 6자리 이상 입력해주세요.");
+                return;
+            }
+
+            try {
+                // 1. 먼저 기존 계정이 있는지 "로그인" 시도!
+                await signInWithEmailAndPassword(auth, email, password);
+                showSuccessPopup(); 
+            } catch (error) {
+                // 2. 로그인이 실패했다면 (아직 가입 안 된 이메일이라면) "계정 생성" 시도!
+                try {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    showSuccessPopup(); // 생성 성공해도 똑같이 환영 팝업 띄우기
+                } catch (createError) {
+                    // 3. 둘 다 실패하면 (진짜 비밀번호가 틀린 경우 등) 예쁜 에러창 띄우기
+                    showErrorPopup("이메일이나 비밀번호를 다시 확인해주세요.");
+                }
+            }
+        });
+
+        // 게스트 버튼 기능
+        document.getElementById('btn-guest').addEventListener('click', () => {
+            window.location.href = "map.html"; 
+        });
+    </script>
+</body>
+</html>
